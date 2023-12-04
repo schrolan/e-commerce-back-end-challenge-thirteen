@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { Tag, Product, ProductTag } = require('../../models');
+const sequelize = require('sequelize');
 
 // The `/api/tags` endpoint
 
@@ -8,9 +9,9 @@ router.get('/', async (req, res) => {
   // be sure to include its associated Product data
   try {
     const allTags = await Tag.findAll({
-      include: [{model: Product}]
+      include: [{model: Product, through: ProductTag, as: 'productTag_products'}]
     })
-    res.json(allTags)
+    res.status(200).json(allTags)
   } catch (err) {
     res.status(500).json(err)
   }
@@ -21,11 +22,11 @@ router.get('/:id', async (req, res) => {
   // be sure to include its associated Product data
   try {
     const tagData = await Tag.findByPk(req.params.id, {
-      include: [{model: Product}]
+      include: [{model: Product, through: ProductTag, as: 'productTag_products'}]
     })
 
     if(!tagData) {
-      res.status.json({ message: 'No tag found with this id!'})
+      res.status(404).json({ message: 'No tag found with this id!'})
       return
     }
 

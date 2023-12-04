@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const sequelize = require('sequelize');
 const { Product, Category, Tag, ProductTag } = require('../../models');
 
 // The `/api/products` endpoint
@@ -11,7 +12,7 @@ router.get('/', async (req, res) => {
     const allProducts = await Product.findAll({
       include: [
         {model: Category},
-        {model: Tag}
+        {model: Tag, attributes: ['tag_name'], through: ProductTag, as: 'productTag_products'}
       ],
     });
     res.status(200).json(allProducts)
@@ -26,11 +27,14 @@ router.get('/:id', async (req, res) => {
   // be sure to include its associated Category and Tag data
   try {
     const productData = await Product.findByPk(req.params.id, {
-
+      include: [
+        {model: Category},
+        {model: Tag, attributes: ['tag_name'], through: ProductTag, as: 'productTag_products'}
+      ],
     })
 
     if (!productData) {
-      res.status.json({message: 'No product found with this id!'})
+      res.status.json({message: 'No product found with this id!'});
       return
     }
 
@@ -120,7 +124,7 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', async (req, res) => {
   // delete one product by its `id` value
   try {
-    const result = await Category.destroy({
+    const result = await Product.destroy({
       where: {
         id: req.params.id
       }
